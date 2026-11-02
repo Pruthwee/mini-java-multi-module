@@ -22,6 +22,7 @@ import java.util.Map;
  * not served here. Endpoints:</p>
  * <ul>
  *   <li>{@code GET /} &rarr; a short JSON description of this service.</li>
+ *   <li>{@code GET /health} &rarr; a simple liveness/readiness probe.</li>
  *   <li>{@code GET /api/catalog} &rarr; transformation names plus the sample
  *       config, so the UI module can build its controls from the API.</li>
  *   <li>{@code POST /api/transform} &rarr; run the transforms and return the
@@ -49,6 +50,7 @@ public final class TransformServer {
 
     public void start() throws IOException {
         server = HttpServer.create(new InetSocketAddress(port), 0);
+        server.createContext("/health", this::handleHealth);
         server.createContext("/api/catalog", this::handleCatalog);
         server.createContext("/api/transform", this::handleTransform);
         server.createContext("/", this::handleRoot);
@@ -60,6 +62,19 @@ public final class TransformServer {
         if (server != null) {
             server.stop(0);
         }
+    }
+
+    // ---- GET /health -------------------------------------------------------
+
+    private void handleHealth(HttpExchange exchange) throws IOException {
+        if (preflight(exchange)) {
+            return;
+        }
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendJson(exchange, 405, "{\"error\":\"use GET\"}");
+            return;
+        }
+        sendJson(exchange, 200, "{\"status\":\"UP\"}");
     }
 
     // ---- GET / --------------------------------------------------------------

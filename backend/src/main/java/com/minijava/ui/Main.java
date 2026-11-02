@@ -13,13 +13,13 @@ import java.io.IOException;
  *   java -cp backend/target/classes com.minijava.ui.Main [port]
  * </pre>
  *
- * <p>The listen port is the first argument, or the {@code PORT} environment
+ * <p>The listen port is the first argument, or the {@code APP_PORT} environment
  * variable, or {@code 8080}. Cross-origin calls from the UI are allowed from
  * {@code CORS_ORIGIN} (default {@code *}).</p>
  */
 public final class Main {
 
-    private static final int DEFAULT_PORT = 8080;
+    private static final int DEFAULT_PORT = resolveEnvPort("APP_PORT", 8080);
 
     private Main() {
     }
@@ -35,6 +35,7 @@ public final class Main {
         System.out.println("MiniJava-UI backend is running.");
         System.out.println("  Catalog: GET  http://localhost:" + port + "/api/catalog");
         System.out.println("  API:     POST http://localhost:" + port + "/api/transform");
+        System.out.println("  Health:  GET  http://localhost:" + port + "/health");
         System.out.println("  CORS:   " + corsOrigin);
         System.out.println("Press Ctrl+C to stop.");
     }
@@ -43,11 +44,16 @@ public final class Main {
         if (args.length > 0 && !args[0].isBlank()) {
             return Integer.parseInt(args[0].trim());
         }
-        String env = System.getenv("PORT");
+        return DEFAULT_PORT;
+    }
+
+    /** Read the listen port from an environment variable, falling back to a default. */
+    private static int resolveEnvPort(String envVar, int fallback) {
+        String env = System.getenv(envVar);
         if (env != null && !env.isBlank()) {
             return Integer.parseInt(env.trim());
         }
-        return DEFAULT_PORT;
+        return fallback;
     }
 
     /** Browser origin allowed to call the API. {@code *} allows any UI host. */

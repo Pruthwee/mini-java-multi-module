@@ -11,11 +11,12 @@ import java.io.IOException;
  *   java -jar ui/target/minijava-ui-frontend.jar [port]
  * </pre>
  *
- * <p>The listen port is the first argument, or {@code UI_PORT}, or {@code 3000}.</p>
+ * <p>The listen port is the first argument, or {@code UI_PORT}, or {@code 3000}.
+ * The port is read from the {@code UI_PORT} environment variable at start-up.</p>
  */
 public final class Main {
 
-    private static final int DEFAULT_PORT = 3000;
+    private static final int DEFAULT_PORT = resolveEnvPort("UI_PORT", 3000);
 
     private Main() {
     }
@@ -35,10 +36,15 @@ public final class Main {
         if (args.length > 0 && !args[0].isBlank()) {
             return Integer.parseInt(args[0].trim());
         }
-        String env = System.getenv("UI_PORT");
+        return DEFAULT_PORT;
+    }
+
+    /** Read the listen port from an environment variable, falling back to a default. */
+    private static int resolveEnvPort(String envVar, int fallback) {
+        String env = System.getenv(envVar);
         if (env != null && !env.isBlank()) {
             return Integer.parseInt(env.trim());
         }
-        return DEFAULT_PORT;
+        return fallback;
     }
 }
